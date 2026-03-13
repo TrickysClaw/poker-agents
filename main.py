@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from engine.types import Player, GameState, Street
 from engine.game import Game
 from agents.base import MockAgent, LLMAgent
-from display.renderer import render_state, render_showdown, render_fold_win, render_info_round_start, render_info_chat, console
+from display.renderer import render_state, render_showdown, render_fold_win, render_info_round_start, render_info_chat, render_new_cards, console
 from config import GAME_CONFIG, AGENT_PROFILES
 
 
@@ -91,6 +91,8 @@ def main():
         if event_type in ("deal", "street", "action", "blind"):
             if state:
                 render_state(state, show_all_cards=GAME_CONFIG["show_all_cards"])
+        elif event_type == "new_cards":
+            render_new_cards(kwargs["street"].value, kwargs["new_cards"], state.community_cards)
         elif event_type == "info_round_start":
             if state:
                 render_info_round_start(state)

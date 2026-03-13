@@ -64,6 +64,18 @@ def render_state(state: GameState, show_all_cards: bool = True):
         console.print(Panel("\n".join(chat_lines), title="💬 Chat", box=box.ROUNDED))
 
 
+def render_new_cards(street_name: str, new_cards: list, all_community: list):
+    """Highlight new community cards being revealed."""
+    new = " ".join(card_str(c) for c in new_cards)
+    board = " ".join(card_str(c) for c in all_community)
+    console.print(Panel(
+        f"[bold]New cards:[/bold] {new}\n[dim]Board:[/dim] {board}",
+        title=f"🂠 [bold]{street_name.upper()} REVEALED[/bold]",
+        box=box.DOUBLE,
+        border_style="yellow",
+    ))
+
+
 def render_info_round_start(state: GameState):
     """Show info round header."""
     console.print(Panel(

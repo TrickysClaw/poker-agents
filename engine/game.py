@@ -81,8 +81,9 @@ class Game:
             if num_cards > 0:
                 cards = self.deck.deal(num_cards)
                 s.community_cards.extend(cards)
+                self.on_event("new_cards", state=s, street=street, new_cards=cards)
+                self._wait_for_user("Press Enter to continue...")
             self.on_event("street", state=s)
-            self.delay()
 
             if self._count_active() <= 1:
                 break
@@ -92,6 +93,10 @@ class Game:
             self._wait_for_user("Press Enter to start betting...")
 
             self._betting_round(street, sb_idx, bb_idx)
+
+            if self._count_active_or_allin() <= 1:
+                break
+
             self._wait_for_user("Press Enter for next round...")
 
             if self._count_active_or_allin() <= 1:
@@ -139,7 +144,6 @@ class Game:
         round_chat: list[dict] = []
 
         self.on_event("info_round_start", state=s, street=street)
-        self.delay()
 
         # Each active player gets a turn to talk
         for i in range(n):
@@ -156,7 +160,6 @@ class Game:
                 round_chat.append(entry)
                 s.chat_history.append(entry)
                 self.on_event("chat", player=p, msg=msg, info_round=True)
-                self.delay()
 
         self.on_event("info_round_end", state=s, street=street)
 

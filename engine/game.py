@@ -13,6 +13,7 @@ from .pot import PotManager
 
 class AgentInterface(Protocol):
     def decide(self, player: Player, state: GameState) -> AgentDecision: ...
+    def chat(self, player: Player, state: GameState, round_chat: list[dict]) -> str: ...
 
 
 class Game:
@@ -86,6 +87,9 @@ class Game:
             if self._count_active() <= 1:
                 break
 
+            # --- Info Gathering Round ---
+            self._info_round(street)
+
             self._betting_round(street, sb_idx, bb_idx)
 
             if self._count_active_or_allin() <= 1:
@@ -118,6 +122,35 @@ class Game:
 
     def _count_active_or_allin(self) -> int:
         return sum(1 for p in self.state.players if not p.folded)
+
+    def _info_round(self, street: Street):
+        """Each active agent chats before betting begins — strategise, trash talk, bluff."""
+        s = self.state
+        n = len(s.players)
+        start = (s.dealer_idx + 1) % n
+        round_chat: list[dict] = []
+
+        self.on_event("info_round_start", state=s, street=street)
+        self.delay()
+
+        # Each active player gets a turn to talk
+        for i in range(n):
+            idx = (start + i) % n
+            p = s.players[idx]
+            if p.folded or p.all_in:
+                continue
+
+            agent = self.agents[p.name]
+            msg = agent.chat(p, s, round_chat)
+            if msg:
+                msg = msg[:150]
+                entry = {"name": p.name, "emoji": p.emoji, "msg": msg}
+                round_chat.append(entry)
+                s.chat_history.append(entry)
+                self.on_event("chat", player=p, msg=msg, info_round=True)
+                self.delay()
+
+        self.on_event("info_round_end", state=s, street=street)
 
     def _betting_round(self, street: Street, sb_idx: int, bb_idx: int):
         s = self.state

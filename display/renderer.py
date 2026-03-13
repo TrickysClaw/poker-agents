@@ -64,6 +64,21 @@ def render_state(state: GameState, show_all_cards: bool = True):
         console.print(Panel("\n".join(chat_lines), title="💬 Chat", box=box.ROUNDED))
 
 
+def render_info_round_start(state: GameState):
+    """Show info round header."""
+    console.print(Panel(
+        f"[italic]Agents are sizing each other up before {state.street.value}...[/italic]",
+        title=f"🗣️  [bold]INFO ROUND — {state.street.value.upper()}[/bold]",
+        box=box.ROUNDED,
+        border_style="cyan",
+    ))
+
+
+def render_info_chat(player_emoji: str, player_name: str, msg: str):
+    """Show a single info round chat message."""
+    console.print(f"  {player_emoji} [bold]{player_name}[/bold]: [italic]\"{msg}\"[/italic]")
+
+
 def render_showdown(state: GameState, winner: Player, won: int, hands: dict, contenders: list[Player], narrator_notes: list[str]):
     """Render the showdown."""
     console.clear()

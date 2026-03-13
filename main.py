@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from engine.types import Player, GameState, Street
 from engine.game import Game
 from agents.base import MockAgent, LLMAgent
-from display.renderer import render_state, render_showdown, render_fold_win, console
+from display.renderer import render_state, render_showdown, render_fold_win, render_info_round_start, render_info_chat, console
 from config import GAME_CONFIG, AGENT_PROFILES
 
 
@@ -91,8 +91,14 @@ def main():
         if event_type in ("deal", "street", "action", "blind"):
             if state:
                 render_state(state, show_all_cards=GAME_CONFIG["show_all_cards"])
+        elif event_type == "info_round_start":
+            if state:
+                render_info_round_start(state)
         elif event_type == "chat":
-            pass  # Chat is shown via render_state
+            if kwargs.get("info_round"):
+                render_info_chat(kwargs["player"].emoji, kwargs["player"].name, kwargs["msg"])
+        elif event_type == "info_round_end":
+            pass  # Could add separator here
         elif event_type == "win":
             if kwargs.get("by_fold"):
                 render_fold_win(kwargs["winner"], kwargs["won"], state)

@@ -89,8 +89,10 @@ class Game:
 
             # --- Info Gathering Round ---
             self._info_round(street)
+            self._wait_for_user("Press Enter to start betting...")
 
             self._betting_round(street, sb_idx, bb_idx)
+            self._wait_for_user("Press Enter for next round...")
 
             if self._count_active_or_allin() <= 1:
                 break
@@ -105,6 +107,8 @@ class Game:
         # Collect remaining bets
         self.pot.collect_bets(s.players)
         s.pot = self.pot.total
+
+        self._wait_for_user("Press Enter for showdown...")
 
         # Determine winner
         return self._showdown()
@@ -122,6 +126,10 @@ class Game:
 
     def _count_active_or_allin(self) -> int:
         return sum(1 for p in self.state.players if not p.folded)
+
+    def _wait_for_user(self, prompt: str = "Press Enter to continue..."):
+        """Pause and wait for user input."""
+        input(f"\n  ⏸️  {prompt}")
 
     def _info_round(self, street: Street):
         """Each active agent chats before betting begins — strategise, trash talk, bluff."""

@@ -21,11 +21,33 @@ def render_state(state: GameState, show_all_cards: bool = True):
     """Render the current game state."""
     console.clear()
     pot_total = state.pot + sum(p.current_bet for p in state.players)
-    board = " ".join(card_str(c) for c in state.community_cards) if state.community_cards else "---"
 
     # Header
-    header = f"🃏 [bold]AI POKER ARENA[/bold]  |  Pot: [green]${pot_total}[/green]  |  Board: {board}"
+    header = f"🃏 [bold]AI POKER ARENA[/bold]  |  Pot: [green]${pot_total}[/green]  |  Street: [bold]{state.street.value.upper()}[/bold]"
     console.print(Panel(header, box=box.DOUBLE))
+
+    # Community Cards — BIG in the middle
+    if state.community_cards:
+        cards_display = "   ".join(card_str(c) for c in state.community_cards)
+        # Show empty slots for unrevealed cards
+        remaining = 5 - len(state.community_cards)
+        if remaining > 0:
+            cards_display += "   " + "   ".join("[dim]🂠[/dim]" for _ in range(remaining))
+        console.print(Panel(
+            f"\n  {cards_display}\n",
+            title="[bold]🂠 COMMUNITY CARDS[/bold]",
+            box=box.HEAVY,
+            border_style="yellow",
+            padding=(1, 4),
+        ))
+    else:
+        console.print(Panel(
+            "\n  [dim]🂠   🂠   🂠   🂠   🂠[/dim]\n",
+            title="[bold]🂠 COMMUNITY CARDS[/bold]",
+            box=box.HEAVY,
+            border_style="dim",
+            padding=(1, 4),
+        ))
 
     # Players
     table = Table(box=box.SIMPLE, show_header=False, padding=(0, 2))

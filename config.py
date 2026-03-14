@@ -1,5 +1,16 @@
 """Game configuration."""
 import os
+from pathlib import Path
+
+# Load .env file if it exists
+env_path = Path(__file__).parent / ".env"
+if env_path.exists():
+    for line in env_path.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, _, value = line.partition("=")
+            value = value.strip().strip('"').strip("'")
+            os.environ.setdefault(key.strip(), value)
 
 GAME_CONFIG = {
     "starting_chips": 1000,

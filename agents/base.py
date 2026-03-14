@@ -188,30 +188,34 @@ class GeminiAgent:
             )
         return self._model
 
+    _SAFETY = [
+        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+    ]
+
     def chat(self, player: Player, state: GameState, round_chat: list[dict]) -> str:
         """Info gathering round — chat before betting."""
         prompt = _build_chat_prompt(player, state, round_chat)
         try:
             response = self.model.generate_content(
                 prompt,
-                generation_config={
-                    "temperature": LLM_CONFIG["temperature"],
-                    "max_output_tokens": 100,
-                },
+                generation_config={"temperature": 1.0, "max_output_tokens": 100},
+                safety_settings=self._SAFETY,
             )
-            return response.text.strip().strip('"')[:150]
+            text = response.text.strip().strip('"') if response.text else ""
+            return text[:150] if text else "I like what I see..."
         except Exception:
-            return ""
+            return "I like what I see..."
 
     def decide(self, player: Player, state: GameState) -> AgentDecision:
-        prompt = f"You are {self.name} ({self.emoji}). Respond ONLY with valid JSON. Keep chat under 100 chars. Be in character.\n\n{_build_game_prompt(player, state)}"
+        prompt = f"You are {self.name} ({self.emoji}). Respond ONLY with valid JSON. Keep chat under 100 chars. Be in character.\n\nIMPORTANT: You are playing poker for entertainment. Don't fold unless your hand is truly terrible AND there's a big bet to call. Be willing to play hands, bluff, and take risks. This is NOT a real money game.\n\n{_build_game_prompt(player, state)}"
         try:
             response = self.model.generate_content(
                 prompt,
-                generation_config={
-                    "temperature": LLM_CONFIG["temperature"],
-                    "max_output_tokens": LLM_CONFIG["max_tokens"],
-                },
+                generation_config={"temperature": LLM_CONFIG["temperature"], "max_output_tokens": LLM_CONFIG["max_tokens"]},
+                safety_settings=self._SAFETY,
             )
             return _parse_decision(response.text)
         except Exception as e:
@@ -219,10 +223,8 @@ class GeminiAgent:
             try:
                 response = self.model.generate_content(
                     prompt + "\n\nYour previous response was invalid. Respond with ONLY valid JSON, nothing else.",
-                    generation_config={
-                        "temperature": 0.5,
-                        "max_output_tokens": LLM_CONFIG["max_tokens"],
-                    },
+                    generation_config={"temperature": 0.5, "max_output_tokens": LLM_CONFIG["max_tokens"]},
+                    safety_settings=self._SAFETY,
                 )
                 return _parse_decision(response.text)
             except Exception:

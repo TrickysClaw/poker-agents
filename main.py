@@ -8,9 +8,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from engine.types import Player, GameState, Street
 from engine.game import Game
-from agents.base import MockAgent, LLMAgent
+from agents.base import MockAgent, LLMAgent, GeminiAgent
 from display.renderer import render_state, render_showdown, render_fold_win, render_info_round_start, render_info_chat, render_new_cards, console
-from config import GAME_CONFIG, AGENT_PROFILES
+from config import GAME_CONFIG, AGENT_PROFILES, LLM_PROVIDER
 
 
 def parse_args():
@@ -66,7 +66,11 @@ def main():
     # Build players and agents
     players = []
     agents = {}
-    use_llm = not args.mock and os.environ.get("ANTHROPIC_API_KEY")
+    
+    if args.mock:
+        provider = "mock"
+    else:
+        provider = LLM_PROVIDER
 
     for name in args.agents:
         profile = AGENT_PROFILES[name]
@@ -77,13 +81,20 @@ def main():
             strategy_file=profile["strategy"],
         )
         players.append(p)
-        if use_llm:
+        if provider == "gemini":
+            agents[p.name] = GeminiAgent(p.name, profile["emoji"], profile["strategy"])
+        elif provider == "anthropic":
             agents[p.name] = LLMAgent(p.name, profile["emoji"], profile["strategy"])
         else:
             agents[p.name] = MockAgent()
 
-    if not use_llm:
-        console.print("[yellow]⚠ No ANTHROPIC_API_KEY found — using mock agents[/yellow]\n")
+    if provider == "mock":
+        console.print("[yellow]⚠ No API key found — using mock agents[/yellow]")
+        console.print("[dim]Set GEMINI_API_KEY or ANTHROPIC_API_KEY for real AI agents[/dim]\n")
+    elif provider == "gemini":
+        console.print("[green]✨ Using Google Gemini (free tier)[/green]\n")
+    elif provider == "anthropic":
+        console.print("[green]✨ Using Anthropic Claude[/green]\n")
 
     # Event handler for rendering
     def on_event(event_type, **kwargs):

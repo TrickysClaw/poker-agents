@@ -1,4 +1,5 @@
 """Game configuration."""
+import os
 
 GAME_CONFIG = {
     "starting_chips": 1000,
@@ -10,8 +11,19 @@ GAME_CONFIG = {
     "show_all_cards": True,
 }
 
+# Auto-detect which LLM provider to use based on env vars
+LLM_PROVIDER = "gemini" if os.environ.get("GEMINI_API_KEY") else (
+    "anthropic" if os.environ.get("ANTHROPIC_API_KEY") else "mock"
+)
+
 LLM_CONFIG = {
-    "model": "claude-sonnet-4-20250514",
+    "provider": LLM_PROVIDER,
+    # Gemini
+    "gemini_model": "gemini-2.0-flash",
+    "gemini_api_key_env": "GEMINI_API_KEY",
+    # Anthropic (fallback)
+    "anthropic_model": "claude-sonnet-4-20250514",
+    # Shared
     "temperature": 0.8,
     "max_tokens": 300,
 }
